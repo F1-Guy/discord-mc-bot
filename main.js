@@ -60,7 +60,8 @@ const rest = new REST({ version: '10' }).setToken(token);
 async function load() {
     try {
         const data = await rest.put(
-            Routes.applicationGuildCommands(clientId, guildId),
+            //Routes.applicationGuildCommands(clientId, guildId),
+	    Routes.applicationCommands(clientId),
             { body: commandsJSON },
         )
         console.log(`Loaded ${data.length} commands.`);
