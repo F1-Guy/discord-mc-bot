@@ -43,14 +43,16 @@ module.exports = {
                 .setDescription('Check the status of the server')),
 
     async execute(interaction) {
+	//await interaction.reply({ content: "Working on it...", ephemeral: true });
+	await interaction.deferReply();
         const subcommand = interaction.options.getSubcommand();
         switch (subcommand) {
             case "start":
-                return await interaction.reply({ content: messages[subcommand][await docker.start()], ephemeral: true });
+                return await interaction.followUp({ content: messages[subcommand][await docker.start()], ephemeral: true });
             case "stop":
-                return await interaction.reply({ content: messages[subcommand][await docker.stop()], ephemeral: true });
+                return await interaction.followUp({ content: messages[subcommand][await docker.stop()], ephemeral: true });
             case "status":
-                return await interaction.reply({ content: messages[subcommand][await docker.check()], ephemeral: true });
+                return await interaction.followUp({ content: messages[subcommand][await docker.check()], ephemeral: true });
         }
         await interaction.reply({ content: "An internal server error has happened, contact the server owner!", ephemeral: true });
     }

@@ -1,4 +1,5 @@
 const { exec } = require("child_process");
+const util = require("util");
 
 const Result = {
     Success: "success",
@@ -6,38 +7,47 @@ const Result = {
     Error: "error",
 }
 
+function run(cmd) {
+  return new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) return reject(error)
+      if (stderr) return reject(stderr)
+      resolve(stdout)
+    })
+  })
+}
+
+
 class DockerManager {
     constructor(containerName) {
         this.containerName = containerName;
     }
 
     async check() {
-        exec(`docker container inspect -f '{{.State.Running}}' ${this.containerName}`, (stdin, stdout, stderr) => {
-            stdout = stdout.trim("\n");
-            if (stdout === "true") return Result.Success;
-            if (stdout === "false") return Result.Failure;
-            return Result.Error;
-        });
+        let res = await run(`docker container inspect -f '{{.State.Running}}' ${this.containerName}`);
+        res = res.trim("\n");
+        if (res === "true") return Result.Success;
+        if (res === "false") return Result.Failure;
+        return Result.Error;
     }
     async start() {
-        const res = await this.check();
-        if (res == undefined) return Result.Error;
-        if (res == true) return Result.Failure;
-        exec(`docker start ${this.containerName}`, (stdin, stdout, stderr) => {
-            if (stdout == this.containerName) return Result.Success;
-            return Result.Failure;
-        });
-
+        const check = await this.check();
+        if (check == Result.Error) return Result.Error;
+        if (check == Result.Success) return Result.Failure;
+        let rez = await run(`docker start ${this.containerName}`);
+        rez = rez.trim("\n");
+        if (rez == this.containerName) return Result.Success;
+        return Result.Failure;
     }
 
     async stop() {
-        const res = await this.check();
-        if (res == undefined) return Result.Error;
-        if (res == false) return Result.Failure;
-        exec(`docker stop ${this.containerName}`, (stdin, stdout, stderr) => {
-            if (stdout == this.containerName) return Result.Success;
-            return Result.Failure;
-        });
+        const check = await this.check();
+        if (check == undefined) return Result.Error;
+        if (check == Result.Failure) return Result.Failure;
+        let rez = await run(`docker stop ${this.containerName}`);
+        rez = rez.trim("\n");
+        if (rez == this.containerName) return Result.Success;
+        return Result.Failure;
     }
 
 }
